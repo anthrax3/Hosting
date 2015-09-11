@@ -7,6 +7,6 @@ namespace Microsoft.AspNet.Server.Features
 {
     public interface IServerAddressesFeature
     {
-        IList<string> Addresses { get; }
+        ICollection<string> Addresses { get; }
     }
 }
