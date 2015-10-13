@@ -93,27 +93,36 @@ namespace Microsoft.AspNet.Hosting.Internal
                 {
                     var httpContext = contextFactory.CreateHttpContext(features);
                     httpContext.ApplicationServices = _applicationServices;
+
                     var requestIdentifier = GetRequestIdentifier(httpContext);
+
+                    contextAccessor.HttpContext = httpContext;
+                    
                     if (diagnosticSource.IsEnabled("Microsoft.AspNet.Hosting.BeginRequest"))
                     {
                         diagnosticSource.Write("Microsoft.AspNet.Hosting.BeginRequest", new { httpContext = httpContext });
                     }
-                    try
+
+                    using (logger.RequestScope(httpContext))
                     {
-                        using (logger.IsEnabled(LogLevel.Critical)
-                            ? logger.BeginScope("Request Id: {RequestId}", requestIdentifier) 
-                            : null)
+                        try
                         {
+                            logger.RequestStarting(httpContext);
                             await application(httpContext);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (diagnosticSource.IsEnabled("Microsoft.AspNet.Hosting.UnhandledException"))
+                        catch (Exception ex)
                         {
-                            diagnosticSource.Write("Microsoft.AspNet.Hosting.UnhandledException", new { httpContext = httpContext, exception = ex });
+                            if (diagnosticSource.IsEnabled("Microsoft.AspNet.Hosting.UnhandledException"))
+                            {
+                                diagnosticSource.Write("Microsoft.AspNet.Hosting.UnhandledException", new { httpContext = httpContext, exception = ex });
+                            }
+                            throw;
                         }
-                        throw;
+                        finally
+                        {
+                            logger.RequestFinished(httpContext);
+                        }
+
                     }
                     if (diagnosticSource.IsEnabled("Microsoft.AspNet.Hosting.EndRequest"))
                     {
