@@ -14,17 +14,15 @@ using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Features;
-using Microsoft.AspNet.Http.Features.Internal;
 using Microsoft.AspNet.Server.Features;
 using Microsoft.AspNet.Testing.xunit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Internal;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.OptionsModel;
+using Microsoft.Extensions.Primitives;
 using Moq;
 using Xunit;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNet.Hosting
 {

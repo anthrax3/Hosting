@@ -92,7 +92,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                 ref _cachedGetValues,
                 new[]
                 {
-                    new KeyValuePair<string, object>("EventName", "RequestStarting"),
                     new KeyValuePair<string, object>("Protocol", _httpContext.Request.Protocol),
                     new KeyValuePair<string, object>("Method", _httpContext.Request.Method),
                     new KeyValuePair<string, object>("ContentType", _httpContext.Request.ContentType),
@@ -122,17 +121,15 @@ namespace Microsoft.AspNet.Hosting.Internal
 
             public override string ToString() => _cachedToString ?? Interlocked.CompareExchange(
                 ref _cachedToString,
-                $"Request finished {_httpContext.Response.StatusCode} {_httpContext.Response.ContentType} {_httpContext.Response.Body.Length}",
+                $"Request finished {_httpContext.Response.StatusCode} {_httpContext.Response.ContentType}",
                 null);
 
             public IEnumerable<KeyValuePair<string, object>> GetValues() => _cachedGetValues ?? Interlocked.CompareExchange(
                 ref _cachedGetValues,
                 new[]
                 {
-                    new KeyValuePair<string, object>("EventName", "RequestFinished"),
                     new KeyValuePair<string, object>("StatusCode", _httpContext.Response.StatusCode),
                     new KeyValuePair<string, object>("ContentType", _httpContext.Response.ContentType),
-                    new KeyValuePair<string, object>("BodyLength", _httpContext.Response.Body.Length),
                 },
                 null);
         }
