@@ -94,8 +94,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                     var httpContext = contextFactory.CreateHttpContext(features);
                     httpContext.ApplicationServices = _applicationServices;
 
-                    var requestIdentifier = GetRequestIdentifier(httpContext);
-
                     if (diagnosticSource.IsEnabled("Microsoft.AspNet.Hosting.BeginRequest"))
                     {
                         diagnosticSource.Write("Microsoft.AspNet.Hosting.BeginRequest", new { httpContext = httpContext });
@@ -277,18 +275,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                     }
                 }
             }
-        }
-
-        private string GetRequestIdentifier(HttpContext httpContext)
-        {
-            var requestIdentifierFeature = httpContext.Features.Get<IHttpRequestIdentifierFeature>();
-            if (requestIdentifierFeature == null)
-            {
-                requestIdentifierFeature = new FastHttpRequestIdentifierFeature();
-                httpContext.Features.Set(requestIdentifierFeature);
-            }
-
-            return requestIdentifierFeature.TraceIdentifier;
         }
 
         private class Disposable : IDisposable

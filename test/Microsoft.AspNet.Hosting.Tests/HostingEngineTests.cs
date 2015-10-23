@@ -14,6 +14,7 @@ using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Hosting.Startup;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Features;
+using Microsoft.AspNet.Http.Features.Internal;
 using Microsoft.AspNet.Server.Features;
 using Microsoft.AspNet.Testing.xunit;
 using Microsoft.Extensions.Configuration;
@@ -323,7 +324,9 @@ namespace Microsoft.AspNet.Hosting
 
             // Assert
             Assert.NotNull(httpContext);
-            Assert.IsType<FastHttpRequestIdentifierFeature>(httpContext.Features.Get<IHttpRequestIdentifierFeature>());
+            Assert.IsType<HttpRequestIdentifierFeature>(httpContext.Features.Get<IHttpRequestIdentifierFeature>());
+            Assert.False(string.IsNullOrWhiteSpace(httpContext.TraceIdentifier));
+            Assert.Same(httpContext.TraceIdentifier, httpContext.Features.Get<IHttpRequestIdentifierFeature>().TraceIdentifier);
         }
 
         [Fact]
