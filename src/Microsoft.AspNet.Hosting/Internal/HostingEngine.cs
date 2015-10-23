@@ -96,8 +96,6 @@ namespace Microsoft.AspNet.Hosting.Internal
 
                     var requestIdentifier = GetRequestIdentifier(httpContext);
 
-                    contextAccessor.HttpContext = httpContext;
-                    
                     if (diagnosticSource.IsEnabled("Microsoft.AspNet.Hosting.BeginRequest"))
                     {
                         diagnosticSource.Write("Microsoft.AspNet.Hosting.BeginRequest", new { httpContext = httpContext });
@@ -105,13 +103,20 @@ namespace Microsoft.AspNet.Hosting.Internal
 
                     using (logger.RequestScope(httpContext))
                     {
+                        int startTime = 0;
                         try
                         {
                             logger.RequestStarting(httpContext);
+
+                            startTime = Environment.TickCount;
                             await application(httpContext);
+
+                            logger.RequestFinished(httpContext, startTime);
                         }
                         catch (Exception ex)
                         {
+                            logger.RequestFailed(httpContext, startTime);
+
                             if (diagnosticSource.IsEnabled("Microsoft.AspNet.Hosting.UnhandledException"))
                             {
                                 diagnosticSource.Write("Microsoft.AspNet.Hosting.UnhandledException", new { httpContext = httpContext, exception = ex });
@@ -120,7 +125,6 @@ namespace Microsoft.AspNet.Hosting.Internal
                         }
                         finally
                         {
-                            logger.RequestFinished(httpContext);
                         }
 
                     }

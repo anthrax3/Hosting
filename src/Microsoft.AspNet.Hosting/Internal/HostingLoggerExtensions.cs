@@ -29,18 +29,34 @@ namespace Microsoft.AspNet.Hosting.Internal
             }
         }
 
-        public static void RequestFinished(this ILogger logger, HttpContext httpContext)
+        public static void RequestFinished(this ILogger logger, HttpContext httpContext, int startTimeInTicks)
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
+                var elapsed = new TimeSpan(Environment.TickCount - startTimeInTicks);
                 logger.Log(
                     logLevel: LogLevel.Information,
                     eventId: 2,
-                    state: new HostingRequestFinished(httpContext),
+                    state: new HostingRequestFinished(httpContext, elapsed),
                     exception: null,
                     formatter: HostingRequestFinished.Callback);
             }
         }
+
+        public static void RequestFailed(this ILogger logger, HttpContext httpContext, int startTimeInTicks)
+        {
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                var elapsed = new TimeSpan(Environment.TickCount - startTimeInTicks);
+                logger.Log(
+                    logLevel: LogLevel.Information,
+                    eventId: 2,
+                    state: new HostingRequestFailed(httpContext, elapsed),
+                    exception: null,
+                    formatter: HostingRequestFailed.Callback);
+            }
+        }
+
 
         private class HostingLogScope : ILogValues
         {
@@ -110,26 +126,61 @@ namespace Microsoft.AspNet.Hosting.Internal
             internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestFinished)state).ToString();
 
             private readonly HttpContext _httpContext;
+            private readonly TimeSpan _elapsed;
 
             private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
             private string _cachedToString;
 
-            public HostingRequestFinished(HttpContext httpContext)
+            public HostingRequestFinished(HttpContext httpContext, TimeSpan elapsed)
             {
                 _httpContext = httpContext;
+                _elapsed = elapsed;
             }
 
             public override string ToString() => _cachedToString ?? Interlocked.CompareExchange(
                 ref _cachedToString,
-                $"Request finished {_httpContext.Response.StatusCode} {_httpContext.Response.ContentType}",
+                $"Request finished in {_elapsed.TotalMilliseconds}ms {_httpContext.Response.StatusCode} {_httpContext.Response.ContentType}",
                 null);
 
             public IEnumerable<KeyValuePair<string, object>> GetValues() => _cachedGetValues ?? Interlocked.CompareExchange(
                 ref _cachedGetValues,
                 new[]
                 {
+                    new KeyValuePair<string, object>("ElapsedMilliseconds", _elapsed.TotalMilliseconds),
                     new KeyValuePair<string, object>("StatusCode", _httpContext.Response.StatusCode),
                     new KeyValuePair<string, object>("ContentType", _httpContext.Response.ContentType),
+                },
+                null);
+        }
+
+        private class HostingRequestFailed
+        {
+            internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((HostingRequestFailed)state).ToString();
+
+            private readonly HttpContext _httpContext;
+            private readonly TimeSpan _elapsed;
+
+            private IEnumerable<KeyValuePair<string, object>> _cachedGetValues;
+            private string _cachedToString;
+
+            public HostingRequestFailed(HttpContext httpContext, TimeSpan elapsed)
+            {
+                _httpContext = httpContext;
+                _elapsed = elapsed;
+            }
+
+            public override string ToString() => _cachedToString ?? Interlocked.CompareExchange(
+                ref _cachedToString,
+                $"Request finished in {_elapsed.TotalMilliseconds}ms 500",
+                null);
+
+            public IEnumerable<KeyValuePair<string, object>> GetValues() => _cachedGetValues ?? Interlocked.CompareExchange(
+                ref _cachedGetValues,
+                new[]
+                {
+                    new KeyValuePair<string, object>("ElapsedMilliseconds", _elapsed.TotalMilliseconds),
+                    new KeyValuePair<string, object>("StatusCode", 500),
+                    new KeyValuePair<string, object>("ContentType", null),
                 },
                 null);
         }
